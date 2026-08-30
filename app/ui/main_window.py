@@ -3,9 +3,10 @@ Main application window with sidebar navigation.
 """
 from PySide6.QtWidgets import (
     QMainWindow, QWidget, QVBoxLayout, QHBoxLayout, QStackedWidget,
-    QPushButton, QLabel, QFrame, QSizePolicy, QFileDialog, QMessageBox
+    QPushButton, QLabel, QFrame, QSizePolicy, QFileDialog, QMessageBox,
+    QToolButton
 )
-from PySide6.QtCore import QSize
+from PySide6.QtCore import QSize, Qt
 from PySide6.QtGui import QFont
 
 from app.ui.dashboard import DashboardWidget
@@ -22,6 +23,94 @@ from app.services.analysis_service import AnalysisService
 from app.services.project_service import ProjectService
 
 
+class TitleBar(QFrame):
+    def __init__(self, parent):
+        super().__init__(parent)
+        self._drag_position = None
+        self.setFixedHeight(36)
+        self.setStyleSheet(f"""
+            QFrame {{
+                background-color: #151922;
+                border-bottom: 1px solid {COLORS['border']};
+            }}
+            QLabel {{
+                background: transparent;
+                color: {COLORS['text']};
+                font-size: 12px;
+            }}
+            QToolButton {{
+                background: transparent;
+                border: none;
+                border-radius: 4px;
+                padding: 6px;
+            }}
+            QToolButton:hover {{
+                background-color: #243044;
+            }}
+            QToolButton#closeButton:hover {{
+                background-color: #c42b45;
+            }}
+        """)
+
+        layout = QHBoxLayout(self)
+        layout.setContentsMargins(10, 0, 8, 0)
+        layout.setSpacing(8)
+
+        icon = QLabel()
+        icon.setPixmap(make_icon("shield", COLORS["primary"], 18).pixmap(18, 18))
+        layout.addWidget(icon)
+
+        title = QLabel(f"{APP_NAME} - {APP_TAGLINE}")
+        title.setAlignment(Qt.AlignmentFlag.AlignVCenter)
+        layout.addWidget(title)
+        layout.addStretch()
+
+        self.min_button = self._window_button("minimize")
+        self.max_button = self._window_button("maximize")
+        self.close_button = self._window_button("close")
+        self.close_button.setObjectName("closeButton")
+
+        self.min_button.clicked.connect(parent.showMinimized)
+        self.max_button.clicked.connect(self._toggle_maximized)
+        self.close_button.clicked.connect(parent.close)
+        layout.addWidget(self.min_button)
+        layout.addWidget(self.max_button)
+        layout.addWidget(self.close_button)
+
+    def _window_button(self, icon_name: str):
+        button = QToolButton()
+        button.setFixedSize(34, 28)
+        button.setIcon(make_icon(icon_name, COLORS["text"], 18))
+        button.setIconSize(QSize(14, 14))
+        return button
+
+    def _toggle_maximized(self):
+        window = self.window()
+        if window.isMaximized():
+            window.showNormal()
+            self.max_button.setIcon(make_icon("maximize", COLORS["text"], 18))
+        else:
+            window.showMaximized()
+            self.max_button.setIcon(make_icon("restore", COLORS["text"], 18))
+
+    def mousePressEvent(self, event):
+        if event.button() == Qt.MouseButton.LeftButton:
+            self._drag_position = event.globalPosition().toPoint() - self.window().frameGeometry().topLeft()
+            event.accept()
+
+    def mouseMoveEvent(self, event):
+        if event.buttons() == Qt.MouseButton.LeftButton and self._drag_position is not None:
+            if self.window().isMaximized():
+                return
+            self.window().move(event.globalPosition().toPoint() - self._drag_position)
+            event.accept()
+
+    def mouseDoubleClickEvent(self, event):
+        if event.button() == Qt.MouseButton.LeftButton:
+            self._toggle_maximized()
+            event.accept()
+
+
 class MainWindow(QMainWindow):
     def __init__(self, db_manager):
         super().__init__()
@@ -30,13 +119,22 @@ class MainWindow(QMainWindow):
         self.project_service = ProjectService(db_manager)
         self.setWindowTitle(f"{APP_NAME} - {APP_TAGLINE}")
         self.setWindowIcon(make_icon("shield", COLORS["primary"], 24))
+        self.setWindowFlags(self.windowFlags() | Qt.WindowType.FramelessWindowHint)
         self.setMinimumSize(1440, 920)
         self.setStyleSheet(DARK_STYLESHEET)
 
         central_widget = QWidget()
         self.setCentralWidget(central_widget)
 
-        main_layout = QHBoxLayout(central_widget)
+        outer_layout = QVBoxLayout(central_widget)
+        outer_layout.setContentsMargins(0, 0, 0, 0)
+        outer_layout.setSpacing(0)
+        outer_layout.addWidget(TitleBar(self))
+
+        app_body = QWidget()
+        outer_layout.addWidget(app_body, 1)
+
+        main_layout = QHBoxLayout(app_body)
         main_layout.setContentsMargins(0, 0, 0, 0)
         main_layout.setSpacing(0)
 
