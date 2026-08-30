@@ -11,7 +11,7 @@ from PySide6.QtWidgets import (
 
 from app.database.repository import Repository
 from app.ui.theme import COLORS, LABEL_STYLE, META_LABEL_STYLE, PRIMARY_BUTTON_STYLE, panel_style, severity_color
-from app.ui.widgets.kit import PageHeader, SectionPanel, SeverityBadge, clear_layout
+from app.ui.widgets.kit import PageHeader, SectionPanel, SeverityBadge, clear_layout, compact_path
 from app.ui.widgets.icons import make_icon
 
 
@@ -128,7 +128,8 @@ class IssuesWidget(QWidget):
         self.table.horizontalHeader().setSectionResizeMode(0, QHeaderView.ResizeMode.Fixed)
         self.table.setColumnWidth(0, 52)
         self.table.horizontalHeader().setSectionResizeMode(1, QHeaderView.ResizeMode.Fixed)
-        self.table.setColumnWidth(1, 112)
+        self.table.setColumnWidth(1, 132)
+        self.table.horizontalHeader().setMinimumSectionSize(72)
         self.table.horizontalHeader().setSectionResizeMode(4, QHeaderView.ResizeMode.Fixed)
         self.table.setColumnWidth(4, 72)
         self.table.setEditTriggers(QTableWidget.EditTrigger.NoEditTriggers)
@@ -219,7 +220,9 @@ class IssuesWidget(QWidget):
             self.table.setItem(row, 0, QTableWidgetItem(str(index)))
             self.table.setCellWidget(row, 1, SeverityBadge(issue.severity))
             self.table.setItem(row, 2, QTableWidgetItem(issue.type))
-            self.table.setItem(row, 3, QTableWidgetItem(issue.file_path or "Unknown"))
+            file_item = QTableWidgetItem(compact_path(issue.file_path, keep_parts=5))
+            file_item.setToolTip(issue.file_path or "Unknown")
+            self.table.setItem(row, 3, file_item)
             self.table.setItem(row, 4, QTableWidgetItem(str(issue.line or "")))
             self.table.setItem(row, 5, QTableWidgetItem(issue.message[:72] + "..." if len(issue.message) > 72 else issue.message))
             self.table.setItem(row, 6, QTableWidgetItem(issue.recommendation[:72] + "..." if len(issue.recommendation) > 72 else issue.recommendation))
