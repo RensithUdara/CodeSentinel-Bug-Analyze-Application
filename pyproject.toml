@@ -16,3 +16,6 @@ dependencies = [
 
 [project.scripts]
 codesentinel = "cli.cli:main"
+
+[tool.setuptools.package-data]
+"app.ui" = ["assets/*.png"]
