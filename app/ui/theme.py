@@ -1,12 +1,15 @@
 """
 Shared brand and visual tokens for the desktop UI.
 """
+import os
 
 APP_NAME = "CodeSentinel"
 APP_TAGLINE = "Code Quality Workbench"
 APP_VERSION = "1.0.0"
 APP_DATA_DIR = ".codesentinel"
 DEFAULT_REPORT_BASENAME = "codesentinel_report"
+ASSETS_DIR = os.path.join(os.path.dirname(__file__), "assets")
+LOGO_ASSET_PATH = os.path.join(ASSETS_DIR, "code-sentinel-logo.png")
 
 COLORS = {
     "bg": "#06111b",
