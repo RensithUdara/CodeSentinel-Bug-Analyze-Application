@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="app/ui/assets/code-sentinel-logo.png" alt="CodeSentinel logo" width="280">
+</p>
+
 # 🛡️ CodeSentinel - Code Quality Workbench
 
 CodeSentinel is a modern desktop application for scanning Python projects, finding code quality problems, and producing professional reports. It helps developers review complexity, maintainability, duplication, security risks, and code smells from one polished workspace.
