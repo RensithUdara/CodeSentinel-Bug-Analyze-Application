@@ -5,7 +5,7 @@ import os
 from datetime import datetime
 
 from PySide6.QtCore import Qt
-from PySide6.QtGui import QFont, QColor
+from PySide6.QtGui import QFont, QColor, QPixmap
 from PySide6.QtWidgets import (
     QFrame, QLabel, QVBoxLayout, QHBoxLayout, QWidget,
     QGraphicsDropShadowEffect, QProgressBar
@@ -13,7 +13,7 @@ from PySide6.QtWidgets import (
 
 from app.ui.widgets.icons import make_pixmap
 from app.ui.theme import (
-    APP_NAME, APP_TAGLINE, APP_VERSION, COLORS, EYEBROW_STYLE,
+    APP_NAME, APP_TAGLINE, APP_VERSION, COLORS, EYEBROW_STYLE, LOGO_ASSET_PATH,
     PAGE_TITLE_STYLE, SUBTITLE_STYLE, SECTION_TITLE_STYLE, LABEL_STYLE,
     META_LABEL_STYLE, panel_style, severity_color
 )
@@ -83,7 +83,18 @@ class AppLogo(QFrame):
         layout.setContentsMargins(0, 0, 0, 1)
         mark = QLabel()
         mark.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        mark.setPixmap(make_pixmap("code", COLORS["primary"], 30 if compact else 36))
+        logo = QPixmap(LOGO_ASSET_PATH)
+        if logo.isNull():
+            mark.setPixmap(make_pixmap("code", COLORS["primary"], 30 if compact else 36))
+        else:
+            mark.setPixmap(
+                logo.scaled(
+                    size - 4,
+                    size - 4,
+                    Qt.AspectRatioMode.KeepAspectRatio,
+                    Qt.TransformationMode.SmoothTransformation,
+                )
+            )
         layout.addWidget(mark)
 
 
