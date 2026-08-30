@@ -1,0 +1,26 @@
+name: 'CodeSentinel Release Gate'
+description: 'Analyze code quality with CodeSentinel'
+inputs:
+  threshold:
+    description: 'Minimum quality score to pass'
+    required: false
+    default: '70'
+  path:
+    description: 'Path to project'
+    required: false
+    default: '.'
+runs:
+  using: 'composite'
+  steps:
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.11'
+    - name: Install CodeSentinel
+      run: |
+        pip install -r requirements.txt
+      shell: bash
+    - name: Run CodeSentinel release gate
+      run: |
+        python -m cli.cli gate ${{ inputs.path }} --threshold ${{ inputs.threshold }}
+      shell: bash
