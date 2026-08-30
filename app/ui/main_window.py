@@ -7,7 +7,7 @@ from PySide6.QtWidgets import (
     QToolButton
 )
 from PySide6.QtCore import QSize, Qt
-from PySide6.QtGui import QFont
+from PySide6.QtGui import QFont, QIcon
 
 from app.ui.dashboard import DashboardWidget
 from app.ui.issues import IssuesWidget
@@ -16,7 +16,7 @@ from app.ui.history import HistoryWidget
 from app.ui.reports import ReportsWidget
 from app.ui.settings import SettingsWidget
 from app.ui.widgets.styles import DARK_STYLESHEET, SIDEBAR_STYLE
-from app.ui.theme import APP_NAME, APP_TAGLINE, APP_VERSION, COLORS, PRIMARY_BUTTON_STYLE
+from app.ui.theme import APP_NAME, APP_TAGLINE, APP_VERSION, COLORS, PRIMARY_BUTTON_STYLE, LOGO_ASSET_PATH
 from app.ui.widgets.kit import AppLogo, ProductFooter
 from app.ui.widgets.icons import make_icon
 from app.services.analysis_service import AnalysisService
@@ -57,7 +57,8 @@ class TitleBar(QFrame):
         layout.setSpacing(8)
 
         icon = QLabel()
-        icon.setPixmap(make_icon("shield", COLORS["primary"], 18).pixmap(18, 18))
+        logo_icon = QIcon(LOGO_ASSET_PATH)
+        icon.setPixmap((logo_icon if not logo_icon.isNull() else make_icon("shield", COLORS["primary"], 18)).pixmap(18, 18))
         layout.addWidget(icon)
 
         title = QLabel(f"{APP_NAME} - {APP_TAGLINE}")
@@ -118,7 +119,8 @@ class MainWindow(QMainWindow):
         self.analysis_service = AnalysisService(db_manager)
         self.project_service = ProjectService(db_manager)
         self.setWindowTitle(f"{APP_NAME} - {APP_TAGLINE}")
-        self.setWindowIcon(make_icon("shield", COLORS["primary"], 24))
+        logo_icon = QIcon(LOGO_ASSET_PATH)
+        self.setWindowIcon(logo_icon if not logo_icon.isNull() else make_icon("shield", COLORS["primary"], 24))
         self.setWindowFlags(self.windowFlags() | Qt.WindowType.FramelessWindowHint)
         self.setMinimumSize(1440, 920)
         self.setStyleSheet(DARK_STYLESHEET)
