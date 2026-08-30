@@ -1,0 +1,11 @@
+name: Code Quality
+on: [push, pull_request]
+jobs:
+  quality:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Run CodeSentinel
+        uses: ./.github/actions/codesentinel
+        with:
+          threshold: 70
