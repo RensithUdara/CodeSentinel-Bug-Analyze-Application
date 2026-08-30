@@ -9,7 +9,7 @@ from PySide6.QtWidgets import (
 
 from app.database.repository import Repository
 from app.ui.theme import COLORS, LABEL_STYLE, META_LABEL_STYLE, PRIMARY_BUTTON_STYLE, panel_style
-from app.ui.widgets.kit import PageHeader, InfoChip, SectionPanel, ScorePill, project_name_from_path
+from app.ui.widgets.kit import PageHeader, InfoChip, SectionPanel, ScorePill, project_name_from_path, compact_path
 from app.ui.widgets.icons import make_icon
 
 
@@ -117,7 +117,9 @@ class FilesWidget(QWidget):
             self.table.insertRow(row)
             self.table.setRowHeight(row, 42)
             self.table.setItem(row, 0, QTableWidgetItem(str(index)))
-            self.table.setItem(row, 1, QTableWidgetItem(file_info.path or ""))
+            file_item = QTableWidgetItem(compact_path(file_info.path, keep_parts=5))
+            file_item.setToolTip(file_info.path or "")
+            self.table.setItem(row, 1, file_item)
             self.table.setItem(row, 2, QTableWidgetItem(file_info.language or "Unknown"))
             self.table.setItem(row, 3, QTableWidgetItem(str(file_info.loc or 0)))
 
