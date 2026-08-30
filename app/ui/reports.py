@@ -114,14 +114,23 @@ class StatusCard(QFrame):
         layout.addWidget(icon)
 
         text = QVBoxLayout()
-        title = QLabel("Report generated successfully!")
-        title.setStyleSheet(f"color: {COLORS['primary']}; font-size: 14px; font-weight: 800;")
-        subtitle = QLabel("Your evidence report is ready to view and share.")
+        self.title = QLabel("Report generated successfully!")
+        self.title.setStyleSheet(f"color: {COLORS['primary']}; font-size: 14px; font-weight: 800;")
+        self.subtitle = QLabel("Your evidence report is ready to view and share.")
+        subtitle = self.subtitle
         subtitle.setStyleSheet(META_LABEL_STYLE)
-        text.addWidget(title)
+        text.addWidget(self.title)
         text.addWidget(subtitle)
         layout.addLayout(text)
         layout.addStretch()
+
+    def set_waiting(self):
+        self.title.setText("Ready to generate")
+        self.subtitle.setText("Choose a format, then generate the report.")
+
+    def set_success(self, path: str):
+        self.title.setText("Report generated successfully!")
+        self.subtitle.setText(path)
 
 
 class ReportsWidget(QWidget):
@@ -256,6 +265,9 @@ class ReportsWidget(QWidget):
         self.open_btn = self._detail_button("Open Report", "open", primary=True)
         self.folder_btn = self._detail_button("Show in Folder", "folder")
         self.share_btn = self._detail_button("Share", "share")
+        self.open_btn.setEnabled(False)
+        self.folder_btn.setEnabled(False)
+        self.share_btn.setEnabled(False)
         self.open_btn.clicked.connect(self.open_report)
         self.folder_btn.clicked.connect(self.show_in_folder)
         self.share_btn.clicked.connect(self.copy_report_path)
@@ -265,6 +277,7 @@ class ReportsWidget(QWidget):
         panel.layout.addLayout(buttons)
 
         self.status_card = StatusCard()
+        self.status_card.set_waiting()
         panel.layout.addWidget(self.status_card)
         panel.layout.addStretch()
         return panel
@@ -297,6 +310,7 @@ class ReportsWidget(QWidget):
             self.details.set_value("Total Issues", "0")
             self.details.set_value("Report Size", "-")
             self.details.set_value("Status", "Waiting for scan", COLORS["medium"])
+            self.status_card.set_waiting()
             return
 
         project = self.repo.get_project_by_id(latest.project_id)
@@ -313,6 +327,8 @@ class ReportsWidget(QWidget):
         self.details.set_value("Total Issues", str(len(issues)))
         self.details.set_value("Report Size", self._estimated_size(len(issues)))
         self.details.set_value("Status", "Ready", COLORS["primary"])
+        if not self.last_report_path:
+            self.status_card.set_waiting()
 
     def _preview_html(self, project_name, quality, security, complexity, maintainability, timestamp):
         return f"""
@@ -395,9 +411,13 @@ class ReportsWidget(QWidget):
             elif fmt == "pdf":
                 gen.generate_pdf(file_path)
             self.last_report_path = file_path
+            self.open_btn.setEnabled(True)
+            self.folder_btn.setEnabled(True)
+            self.share_btn.setEnabled(True)
             self.refresh_preview()
             self.details.set_value("Report Size", self._file_size(file_path))
             self.details.set_value("Status", "Ready", COLORS["primary"])
+            self.status_card.set_success(file_path)
         except ImportError as e:
             QMessageBox.warning(self, "Missing Dependency", str(e))
         except Exception as e:
