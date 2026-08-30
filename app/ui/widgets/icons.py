@@ -121,6 +121,19 @@ def make_pixmap(name: str, color: str = None, size: int = 22) -> QPixmap:
         painter.drawLine(QPointF(0.32 * s, 0.16 * s), QPointF(0.32 * s, 0.38 * s))
         painter.drawLine(QPointF(0.32 * s, 0.38 * s), QPointF(0.66 * s, 0.38 * s))
         painter.drawRect(QRectF(0.34 * s, 0.6 * s, 0.32 * s, 0.24 * s))
+    elif n == "check":
+        _poly(painter, s, [(0.22, 0.52), (0.42, 0.72), (0.8, 0.3)])
+    elif n == "open":
+        painter.drawRect(QRectF(0.2 * s, 0.32 * s, 0.48 * s, 0.48 * s))
+        painter.drawLine(QPointF(0.5 * s, 0.2 * s), QPointF(0.82 * s, 0.2 * s))
+        painter.drawLine(QPointF(0.82 * s, 0.2 * s), QPointF(0.82 * s, 0.52 * s))
+        painter.drawLine(QPointF(0.46 * s, 0.56 * s), QPointF(0.82 * s, 0.2 * s))
+    elif n == "share":
+        painter.drawEllipse(QRectF(0.18 * s, 0.42 * s, 0.16 * s, 0.16 * s))
+        painter.drawEllipse(QRectF(0.66 * s, 0.18 * s, 0.16 * s, 0.16 * s))
+        painter.drawEllipse(QRectF(0.66 * s, 0.66 * s, 0.16 * s, 0.16 * s))
+        painter.drawLine(QPointF(0.34 * s, 0.48 * s), QPointF(0.66 * s, 0.3 * s))
+        painter.drawLine(QPointF(0.34 * s, 0.54 * s), QPointF(0.66 * s, 0.72 * s))
     elif n == "info":
         painter.drawEllipse(QRectF(0.18 * s, 0.18 * s, 0.64 * s, 0.64 * s))
         painter.drawLine(QPointF(0.5 * s, 0.46 * s), QPointF(0.5 * s, 0.68 * s))
