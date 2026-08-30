@@ -2,12 +2,18 @@
 Dashboard page with summary metrics, charts, and priority findings.
 """
 from PySide6.QtCore import Qt, QSize
-from PySide6.QtWidgets import QWidget, QVBoxLayout, QHBoxLayout, QLabel, QScrollArea, QPushButton, QFrame
+from PySide6.QtWidgets import (
+    QWidget, QVBoxLayout, QHBoxLayout, QLabel, QScrollArea,
+    QPushButton, QFrame, QSizePolicy
+)
 
 from app.database.repository import Repository
 from app.ui.widgets.charts import MplCanvas
-from app.ui.widgets.kit import PageHeader, InfoChip, StatCard, SectionPanel, BigProgressCard, clear_layout, project_name_from_path, format_timestamp
 from app.ui.widgets.icons import make_icon
+from app.ui.widgets.kit import (
+    PageHeader, InfoChip, StatCard, SectionPanel, BigProgressCard,
+    clear_layout, project_name_from_path, format_timestamp
+)
 from app.ui.theme import COLORS, LABEL_STYLE, META_LABEL_STYLE, PRIMARY_BUTTON_STYLE, severity_color
 
 
@@ -15,6 +21,7 @@ class FindingsMixCard(SectionPanel):
     def __init__(self, critical: int, high: int, medium: int, low: int):
         super().__init__("Findings Mix", "issue")
         total = critical + high + medium + low
+
         total_row = QHBoxLayout()
         total_row.addStretch()
         total_label = QLabel("Total")
@@ -22,7 +29,10 @@ class FindingsMixCard(SectionPanel):
         total_value = QLabel(str(total))
         total_value.setAlignment(Qt.AlignmentFlag.AlignCenter)
         total_value.setMinimumWidth(44)
-        total_value.setStyleSheet(f"background-color: #142438; color: {COLORS['text']}; border-radius: 8px; padding: 7px 12px; font-weight: 800;")
+        total_value.setStyleSheet(
+            f"background-color: #142438; color: {COLORS['text']}; "
+            "border-radius: 8px; padding: 7px 12px; font-weight: 800;"
+        )
         total_row.addWidget(total_label)
         total_row.addWidget(total_value)
         self.layout.addLayout(total_row)
@@ -34,13 +44,14 @@ class FindingsMixCard(SectionPanel):
             ("Low", low, COLORS["low"]),
         ]:
             row = QHBoxLayout()
-            dot = QLabel("●")
-            dot.setStyleSheet(f"color: {color}; font-size: 13px;")
+            dot = QLabel()
+            dot.setFixedSize(10, 10)
+            dot.setStyleSheet(f"background-color: {color}; border-radius: 5px;")
             label = QLabel(name)
             label.setStyleSheet(LABEL_STYLE)
             value = QLabel(str(count))
             value.setStyleSheet(f"color: {color}; font-size: 14px; font-weight: 800;")
-            row.addWidget(dot)
+            row.addWidget(dot, 0, Qt.AlignmentFlag.AlignVCenter)
             row.addWidget(label)
             row.addStretch()
             row.addWidget(value)
@@ -57,6 +68,78 @@ class DebtCard(SectionPanel):
         self.layout.addWidget(value)
         self.layout.addWidget(note)
         self.layout.addStretch()
+
+
+class PriorityFindingRow(QFrame):
+    def __init__(self, issue):
+        super().__init__()
+        color = severity_color(issue.severity)
+        location_text = _short_location(issue.file_path, issue.line)
+        full_location = f"{issue.file_path}:{issue.line or ''}"
+
+        self.setMinimumHeight(64)
+        self.setMaximumHeight(68)
+        self.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
+        self.setStyleSheet(f"""
+            QFrame {{
+                background-color: #071622;
+                border: 1px solid {COLORS['border']};
+                border-radius: 8px;
+            }}
+            QFrame:hover {{
+                border-color: {COLORS['border_hover']};
+                background-color: #0a1d2c;
+            }}
+        """)
+
+        layout = QHBoxLayout(self)
+        layout.setContentsMargins(14, 9, 14, 9)
+        layout.setSpacing(14)
+
+        stripe = QFrame()
+        stripe.setFixedSize(4, 42)
+        stripe.setStyleSheet(f"background-color: {color}; border: none; border-radius: 2px;")
+        layout.addWidget(stripe, 0, Qt.AlignmentFlag.AlignVCenter)
+
+        text = QVBoxLayout()
+        text.setSpacing(5)
+        title = QLabel(f"{issue.type} - {issue.category}")
+        title.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
+        title.setStyleSheet(
+            f"color: {COLORS['text']}; font-weight: 800; font-size: 13px; "
+            "background: transparent; border: none;"
+        )
+        msg = QLabel(issue.message[:110] + "..." if len(issue.message) > 110 else issue.message)
+        msg.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
+        msg.setStyleSheet(
+            f"color: {COLORS['muted']}; font-size: 12px; "
+            "background: transparent; border: none;"
+        )
+        text.addWidget(title)
+        text.addWidget(msg)
+        layout.addLayout(text, 1)
+
+        badge = QLabel(issue.severity)
+        badge.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        badge.setFixedSize(92, 38)
+        badge.setStyleSheet(f"""
+            color: {color};
+            background-color: rgba(255,255,255,0.07);
+            border: 1px solid rgba(255,255,255,0.04);
+            border-radius: 8px;
+            font-weight: 800;
+        """)
+        layout.addWidget(badge, 0, Qt.AlignmentFlag.AlignVCenter)
+
+        location = QLabel(location_text)
+        location.setToolTip(full_location)
+        location.setFixedWidth(390)
+        location.setAlignment(Qt.AlignmentFlag.AlignVCenter | Qt.AlignmentFlag.AlignLeft)
+        location.setStyleSheet(
+            f"color: {COLORS['muted']}; font-size: 12px; "
+            "background: transparent; border: none;"
+        )
+        layout.addWidget(location, 0, Qt.AlignmentFlag.AlignVCenter)
 
 
 class DashboardWidget(QWidget):
@@ -97,7 +180,12 @@ class DashboardWidget(QWidget):
         scan_again.setIcon(make_icon("refresh", COLORS["primary"], 22))
         scan_again.setIconSize(QSize(20, 20))
         scan_again.setMinimumHeight(58)
-        scan_again.setStyleSheet(PRIMARY_BUTTON_STYLE + "QPushButton { background-color: transparent; color: #2df29d; border: 1px solid #2df29d; border-radius: 8px; padding: 0 22px; } QPushButton:hover { background-color: rgba(45, 242, 157, 0.12); }")
+        scan_again.setStyleSheet(
+            PRIMARY_BUTTON_STYLE +
+            "QPushButton { background-color: transparent; color: #2df29d; "
+            "border: 1px solid #2df29d; border-radius: 8px; padding: 0 22px; } "
+            "QPushButton:hover { background-color: rgba(45, 242, 157, 0.12); }"
+        )
         scan_again.clicked.connect(lambda: self.window().analyze_project() if hasattr(self.window(), "analyze_project") else None)
         header_row.addWidget(scan_again)
         self.content_layout.addLayout(header_row)
@@ -146,35 +234,21 @@ class DashboardWidget(QWidget):
 
         priority = SectionPanel("Priority Findings", "issue")
         if issues:
-            for issue in issues[:3]:
-                row = QFrame()
-                row.setStyleSheet(f"QFrame {{ background-color: #071622; border: 1px solid {COLORS['border']}; border-radius: 8px; }}")
-                row_layout = QHBoxLayout(row)
-                row_layout.setContentsMargins(14, 10, 14, 10)
-                row_layout.setSpacing(12)
-                color = severity_color(issue.severity)
-                dot = QLabel("●")
-                dot.setStyleSheet(f"color: {color}; font-size: 14px;")
-                title = QLabel(f"{issue.type} - {issue.category}")
-                title.setStyleSheet(f"color: {COLORS['text']}; font-weight: 700;")
-                msg = QLabel(issue.message[:90] + "..." if len(issue.message) > 90 else issue.message)
-                msg.setStyleSheet(META_LABEL_STYLE)
-                text = QVBoxLayout()
-                text.addWidget(title)
-                text.addWidget(msg)
-                badge = QLabel(issue.severity)
-                badge.setAlignment(Qt.AlignmentFlag.AlignCenter)
-                badge.setStyleSheet(f"color: {color}; background-color: rgba(255,255,255,0.07); border-radius: 7px; padding: 6px 14px; font-weight: 800;")
-                location = QLabel(f"{issue.file_path}:{issue.line or ''}")
-                location.setStyleSheet(META_LABEL_STYLE)
-                row_layout.addWidget(dot)
-                row_layout.addLayout(text, 1)
-                row_layout.addWidget(badge)
-                row_layout.addWidget(location)
-                priority.layout.addWidget(row)
+            severity_order = {"Critical": 0, "High": 1, "Medium": 2, "Low": 3}
+            for issue in sorted(issues, key=lambda item: severity_order.get(item.severity, 4))[:3]:
+                priority.layout.addWidget(PriorityFindingRow(issue))
         else:
             no_findings = QLabel("No priority findings in the latest scan.")
             no_findings.setStyleSheet(LABEL_STYLE)
             priority.layout.addWidget(no_findings)
         self.content_layout.addWidget(priority)
         self.content_layout.addStretch()
+
+
+def _short_location(path: str, line) -> str:
+    if not path:
+        return f"Unknown:{line or ''}"
+    normalized = path.replace("\\", "/")
+    parts = [part for part in normalized.split("/") if part]
+    tail = "/".join(parts[-4:]) if len(parts) > 4 else normalized
+    return f"{tail}:{line or ''}"
