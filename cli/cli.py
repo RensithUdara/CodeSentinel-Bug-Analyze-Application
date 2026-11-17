@@ -2,6 +2,7 @@
 """
 Command-line interface for CodeSentinel.
 """
+import utils.session
 import argparse
 import sys
 import os
